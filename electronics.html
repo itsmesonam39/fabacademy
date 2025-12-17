@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electronics & Code - Check-IT Console</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav id="navbar">
+        <div class="logo">FAB PORTFOLIO</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html#concept-lab">Concepts</a></li>
+            <li><a href="index.html#flagship">Mechanical Build</a></li>
+        </ul>
+    </nav>
+
+    <header class="parallax-section header-bg" style="height: 50vh;">
+        <div class="overlay">
+            <div class="content-box">
+                <h1>SYSTEM ARCHITECTURE</h1>
+                <p class="subtitle">ESP32 + RFID + Google Cloud Integration</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="light-section">
+        <div class="container">
+
+            <p style="margin-bottom: 40px;"><a href="index.html" style="color:#ff4757; text-decoration:none;">&larr; Back to Main Build</a></p>
+
+            <div class="doc-block">
+                <h3>Phase 1: The Electronics (Shared SPI)</h3>
+                <p>The system is built on a <strong>Shared SPI Bus</strong> architecture. Both the RFID reader and the TFT Screen share the data lines (MOSI, MISO, SCK) but use separate Chip Select (CS) pins.</p>
+                
+                <div style="background: #2d2d2d; color: #f8f8f2; padding: 25px; border-radius: 8px; font-family: 'Roboto Mono', monospace; overflow-x: auto; border: 1px solid #444; margin-top: 20px;">
+<pre style="background: transparent; border: none; padding: 0; margin: 0; color: #a6e22e; font-size: 0.85rem;">
+      ESP32 (MASTER)                  SHARED SPI BUS
+   +-------------------+          +----------------------+
+   |             D18   | =======> | SCK (Clock)          | ---> To RFID & TFT
+   |             D23   | =======> | MOSI (Data In)       | ---> To RFID & TFT
+   |             D19   | =======> | MISO (Data Out)      | ---> To RFID & TFT
+   +-------------------+          +----------------------+
+
+      UNIQUE CONTROL LINES
+   +-------------------+          +----------------------+
+   |             D5    | =======> | RFID SDA (CS)        |
+   |             D22   | =======> | RFID RST             |
+   +-------------------+          +----------------------+
+   |             D15   | =======> | TFT CS               |
+   |             D4    | =======> | TFT RST              |
+   |             D2    | =======> | TFT DC (Data/Cmd)    |
+   +-------------------+          +----------------------+
+</pre>
+                </div>
+            </div>
+
+            <hr class="divider">
+
+            <div class="doc-block">
+                <h3>Phase 2: Library Configuration</h3>
+                <p>The <code>TFT_eSPI</code> library requires manual configuration. I had to locate the <strong>User_Setup.h</strong> file in the library folder and define the custom pins to match my wiring.</p>
+                
+                <div style="background: #f4f4f4; padding: 15px; border-left: 5px solid #ff4757;">
+                    <strong>File Location:</strong> <code>Documents/Arduino/libraries/TFT_eSPI/User_Setup.h</code>
+                </div>
+
+                <pre><code>
+// 1. Define the Driver
+#define ILI9341_DRIVER
+
+// 2. Define the Pins (Matching the Schematic)
+#define TFT_MISO 19
+#define TFT_MOSI 23
+#define TFT_SCLK 18
+#define TFT_CS   15  
+#define TFT_DC    2  
+#define TFT_RST   4  
+
+// 3. Load Fonts
+#define LOAD_GLCD
+#define LOAD_FONT2
+#define LOAD_FONT4
+#define SMOOTH_FONT
+                </code></pre>
+            </div>
+
+            <hr class="divider">
+
+            <div class="doc-block">
+                <h3>Phase 3: The Cloud Backend (Google Apps Script)</h3>
+                <p>To store the data, I turned a Google Sheet into a REST API. This script accepts GET requests from the ESP32 and appends the data to the spreadsheet.</p>
+                <p><strong>Deployment Settings:</strong> Web App, Execute as Me, Who has access: Anyone.</p>
+
+                <pre><code>
+function doGet(e) {
+  // 1. Get parameters from ESP32
+  var userID = e.parameter.user;
+  var itemID = e.parameter.item;
+  
+  // 2. Open the Sheet
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  
+  // 3. Append Row with Timestamp
+  var timestamp = new Date();
+  sheet.appendRow([timestamp, userID, itemID, "Checked Out"]);
+  
+  // 4. Return Success
+  return ContentService.createTextOutput("Success");
+}
+                </code></pre>
+            </div>
+
+            <hr class="divider">
+
+            <div class="doc-block">
+                <h3>Phase 4: The Firmware (State Machine)</h3>
+                <p>The logic runs on a 3-stage State Machine: <strong>Idle</strong>, <strong>User Logged In</strong>, and <strong>Processing</strong>. This prevents read errors and manages the WiFi connection.</p>
+                
+                <pre><code>
+#include &lt;SPI.h&gt;
+#include &lt;MFRC522.h&gt;
+#include &lt;TFT_eSPI.h&gt;
+#include &lt;WiFi.h&gt;
+#include &lt;HTTPClient.h&gt;
+
+// CONFIGURATION
+const char* ssid = "YOUR_WIFI_NAME";
+const char* password = "YOUR_WIFI_PASSWORD";
+String GOOGLE_SCRIPT_ID = "YOUR_DEPLOYMENT_ID";
+
+// OBJECTS
+MFRC522 mfrc522(5, 22); // SS_PIN, RST_PIN
+TFT_eSPI tft = TFT_eSPI(); 
+
+int currentState = 0; // 0=Idle, 1=User_Scanned, 2=Processing
+String userID = "";
+String itemID = "";
+
+void setup() {
+  Serial.begin(115200);
+  tft.init();
+  tft.setRotation(1);
+  tft.fillScreen(TFT_BLACK);
+  
+  // WiFi Connection
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  SPI.begin(); 
+  mfrc522.PCD_Init();
+}
+
+void loop() {
+  // RFID & State Machine Logic
+  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) return;
+  
+  String cardID = "";
+  for (byte i = 0; i < mfrc522.uid.size; i++) {
+    cardID += String(mfrc522.uid.uidByte[i], HEX);
+  }
+  cardID.toUpperCase();
+
+  if (currentState == 0) {
+    userID = cardID;
+    currentState = 1;
+    // Update Screen to "Hello User"
+  } 
+  else if (currentState == 1) {
+    itemID = cardID;
+    sendData(userID, itemID);
+  }
+}
+
+void sendData(String user, String item) {
+  if(WiFi.status() == WL_CONNECTED){
+    HTTPClient http;
+    String url = "https://script.google.com/macros/s/" + GOOGLE_SCRIPT_ID + "/exec?user=" + user + "&item=" + item;
+    
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.begin(url);
+    int httpCode = http.GET();
+    
+    if (httpCode > 0) {
+       // Update Screen to "Success"
+       tft.fillScreen(TFT_GREEN);
+    }
+    http.end();
+  }
+  delay(3000);
+  // Reset System
+  currentState = 0;
+}
+                </code></pre>
+            </div>
+
+            <div style="text-align: center; margin-top: 60px;">
+                <a href="index.html" class="btn-main">Return to Mechanical Build</a>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>Fab Academy 2025 - Electronics Documentation</p>
+    </footer>
+
+</body>
+</html>

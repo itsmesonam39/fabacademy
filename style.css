@@ -1,0 +1,276 @@
+/* --- GLOBAL RESETS --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: 0.3s;
+}
+
+ul {
+    list-style: none;
+}
+
+/* --- TYPOGRAPHY --- */
+h1, h2, h3, h4 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+p {
+    margin-bottom: 1rem;
+    font-weight: 300;
+}
+
+/* --- NAVIGATION --- */
+#navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background: #1a1a1a;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+#navbar .logo {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #ff4757; /* Fab Red */
+}
+
+#navbar ul {
+    display: flex;
+    gap: 20px;
+}
+
+#navbar ul li a:hover {
+    color: #ff4757;
+}
+
+/* --- SECTIONS & LAYOUT --- */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.light-section {
+    padding: 80px 0;
+    background: #fff;
+}
+
+.dark-section {
+    padding: 80px 0;
+    background: #2f3542;
+    color: #fff;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.intro-text {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto 50px auto;
+    color: #ccc;
+}
+
+/* --- PARALLAX HEADERS --- */
+.parallax-section {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    color: #fff;
+    position: relative;
+}
+
+/* UPDATED FOR PNG IMAGES */
+.header-bg {
+    /* Changed .jpg to .png below */
+    background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('assets/images/header-bg.png'); 
+    background-color: #333; 
+}
+
+.project-bg {
+    /* Changed .jpg to .png below */
+    background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('assets/images/project-bg.png');
+    background-color: #333;
+    height: 60vh;
+}
+
+.content-box h1 {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+}
+
+.content-box .subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #ddd;
+}
+
+/* --- BUTTONS --- */
+.btn-main {
+    display: inline-block;
+    padding: 12px 30px;
+    background: #ff4757;
+    color: #fff;
+    border-radius: 30px;
+    font-weight: 600;
+    border: 2px solid #ff4757;
+}
+
+.btn-main:hover {
+    background: transparent;
+    color: #ff4757;
+}
+
+/* --- CARDS GRID (Concepts) --- */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.concept-card {
+    background: #3e4451;
+    padding: 30px;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+    border-bottom: 4px solid #ff4757;
+}
+
+.concept-card:hover {
+    transform: translateY(-5px);
+}
+
+.concept-card h3 {
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+/* --- DOCUMENTATION BLOCKS --- */
+.doc-block {
+    margin-bottom: 60px;
+}
+
+.divider {
+    border: 0;
+    height: 1px;
+    background: #ddd;
+    margin: 60px 0;
+}
+
+/* --- STEP BY STEP (Fusion 360) --- */
+.step {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 60px;
+    padding: 20px;
+    background: #fdfdfd;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+/* Zig-Zag Effect: Every even step flips direction */
+.step:nth-child(even) {
+    flex-direction: row-reverse;
+}
+
+.step-text {
+    flex: 1;
+}
+
+.step-text h4 {
+    color: #ff4757;
+    margin-bottom: 10px;
+}
+
+.step-image {
+    flex: 1;
+}
+
+.step-image img {
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.step-image img:hover {
+    transform: scale(1.02);
+}
+
+/* --- CODE BLOCKS (For Electronics Page) --- */
+pre {
+    background: #282c34;
+    color: #abb2bf;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto; /* Scroll sideways if code is long */
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+    border-left: 5px solid #ff4757;
+    margin-top: 15px;
+}
+
+code {
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* --- FOOTER --- */
+footer {
+    background: #1a1a1a;
+    color: #777;
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+    .content-box h1 {
+        font-size: 2.5rem;
+    }
+    
+    .step, .step:nth-child(even) {
+        flex-direction: column;
+        text-align: left;
+    }
+    
+    .step-image {
+        width: 100%;
+    }
+    
+    #navbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
